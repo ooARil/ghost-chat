@@ -21,7 +21,7 @@ RUN cargo build --release --bin revolt-gifbox
 RUN cargo build --release --bin revolt-voice-ingress
 
 # Runtime stage
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 WORKDIR /app
 
