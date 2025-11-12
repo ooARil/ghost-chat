@@ -114,6 +114,11 @@ auto_derived!(
         MessagePinned { id: String, by: String },
         #[serde(rename = "message_unpinned")]
         MessageUnpinned { id: String, by: String },
+        #[serde(rename = "call_started")]
+        CallStarted {
+            by: String,
+            finished_at: Option<Timestamp>,
+        },
     }
 
     /// Name and / or avatar override information
@@ -326,9 +331,7 @@ impl Message {
         }
 
         let server_id = match channel {
-            Channel::TextChannel { ref server, .. } | Channel::VoiceChannel { ref server, .. } => {
-                Some(server.clone())
-            }
+            Channel::TextChannel { ref server, .. } => Some(server.clone()),
             _ => None,
         };
 
@@ -440,16 +443,13 @@ impl Message {
         }
 
         // Verify replies are valid.
-        let mut replies = Vec::new();
-
+        let mut replies = HashSet::new();
         if let Some(entries) = data.replies {
             if entries.len() > config.features.limits.global.message_replies {
                 return Err(create_error!(TooManyReplies {
                     max: config.features.limits.global.message_replies,
                 }));
             }
-
-            replies.reserve(entries.len());
 
             for ReplyIntent {
                 id,
@@ -464,12 +464,7 @@ impl Message {
                             user_mentions.insert(message.author.to_owned());
                         }
 
-                        // This is O(n^2), but this is faster than a HashSet
-                        // when n < 20; as long as the message_replies limit
-                        // is reasonable, this will be fast.
-                        if !replies.contains(&message.id) {
-                            replies.push(message.id);
-                        }
+                        replies.insert(message.id);
                     }
                     // If the referenced message doesn't exist and fail_if_not_exists
                     // is set to false, send the message without the reply.
@@ -486,6 +481,7 @@ impl Message {
 
         // Validate the mentions go to users in the channel/server
         if !user_mentions.is_empty() {
+            #[allow(deprecated)]
             match channel {
                 Channel::DirectMessage { ref recipients, .. }
                 | Channel::Group { ref recipients, .. } => {
@@ -493,8 +489,7 @@ impl Message {
                     user_mentions.retain(|m| recipients_hash.contains(m));
                     role_mentions.clear();
                 }
-                Channel::TextChannel { ref server, .. }
-                | Channel::VoiceChannel { ref server, .. } => {
+                Channel::TextChannel { ref server, .. }=> {
                     let mentions_vec = Vec::from_iter(user_mentions.iter().cloned());
 
                     let valid_members = db.fetch_members(server.as_str(), &mentions_vec[..]).await;
@@ -542,7 +537,9 @@ impl Message {
         }
 
         if !replies.is_empty() {
-            message.replies.replace(replies);
+            message
+                .replies
+                .replace(replies.into_iter().collect::<Vec<String>>());
         }
 
         // Calculate final message flags
@@ -684,7 +681,6 @@ impl Message {
         )
         .await?;
 
-
         if !self.has_suppressed_notifications()
             && (self.mentions.is_some() || self.contains_mass_push_mention())
         {
@@ -800,7 +796,7 @@ impl Message {
         query: MessageQuery,
         perspective: &User,
         include_users: Option<bool>,
-        server_id: Option<String>,
+        server_id: Option<&str>,
     ) -> Result<BulkMessageResponse> {
         let messages: Vec<v0::Message> = db
             .fetch_messages(query)
@@ -843,6 +839,7 @@ impl Message {
                             v0::SystemMessage::MessageUnpinned { by, .. } => {
                                 users.push(by.clone());
                             }
+                            v0::SystemMessage::CallStarted { by, .. } => users.push(by.clone()),
                         }
                     }
                     users
@@ -857,7 +854,7 @@ impl Message {
                 users,
                 members: if let Some(server_id) = server_id {
                     Some(
-                        db.fetch_members(&server_id, &user_ids)
+                        db.fetch_members(server_id, &user_ids)
                             .await?
                             .into_iter()
                             .map(Into::into)

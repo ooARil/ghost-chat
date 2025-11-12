@@ -69,7 +69,6 @@ impl<'r> Responder<'r, 'static> for Error {
             ErrorType::NotPrivileged => Status::Forbidden,
             ErrorType::CannotGiveMissingPermissions => Status::Forbidden,
             ErrorType::NotOwner => Status::Forbidden,
-            ErrorType::IsElevated => Status::Forbidden,
 
             ErrorType::DatabaseError { .. } => Status::InternalServerError,
             ErrorType::InternalError => Status::InternalServerError,
@@ -79,10 +78,14 @@ impl<'r> Responder<'r, 'static> for Error {
             ErrorType::InvalidSession => Status::Unauthorized,
             ErrorType::NotAuthenticated => Status::Unauthorized,
             ErrorType::DuplicateNonce => Status::Conflict,
-            ErrorType::VosoUnavailable => Status::BadRequest,
             ErrorType::NotFound => Status::NotFound,
             ErrorType::NoEffect => Status::Ok,
             ErrorType::FailedValidation { .. } => Status::BadRequest,
+            ErrorType::LiveKitUnavailable => Status::BadRequest,
+            ErrorType::NotAVoiceChannel => Status::BadRequest,
+            ErrorType::AlreadyConnected => Status::BadRequest,
+            ErrorType::NotConnected => Status::BadRequest,
+            ErrorType::UnknownNode => Status::BadRequest,
             ErrorType::FeatureDisabled { .. } => Status::BadRequest,
 
             ErrorType::ProxyError => Status::BadRequest,
@@ -91,6 +94,7 @@ impl<'r> Responder<'r, 'static> for Error {
             ErrorType::FileTypeNotAllowed => Status::BadRequest,
             ErrorType::ImageProcessingFailed => Status::InternalServerError,
             ErrorType::NoEmbedData => Status::BadRequest,
+            ErrorType::VosoUnavailable => Status::BadRequest,
         };
 
         // Serialize the error data structure into JSON.

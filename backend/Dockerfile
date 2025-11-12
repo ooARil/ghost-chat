@@ -18,6 +18,7 @@ RUN cargo build --release --bin revolt-bonfire
 RUN cargo build --release --bin revolt-autumn
 RUN cargo build --release --bin revolt-january
 RUN cargo build --release --bin revolt-gifbox
+RUN cargo build --release --bin revolt-voice-ingress
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -36,6 +37,7 @@ COPY --from=builder /app/target/release/revolt-bonfire /usr/local/bin/
 COPY --from=builder /app/target/release/revolt-autumn /usr/local/bin/
 COPY --from=builder /app/target/release/revolt-january /usr/local/bin/
 COPY --from=builder /app/target/release/revolt-gifbox /usr/local/bin/
+COPY --from=builder /app/target/release/revolt-voice-ingress /usr/local/bin/
 
 # Copy configuration
 COPY Revolt.toml /app/
@@ -48,6 +50,7 @@ revolt-bonfire & \n\
 revolt-autumn & \n\
 revolt-january & \n\
 revolt-gifbox & \n\
+revolt-voice-ingress & \n\
 wait' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 14702 14703 14704 14705 14706

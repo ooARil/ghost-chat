@@ -62,7 +62,6 @@ impl IntoResponse for Error {
             ErrorType::NotPrivileged => StatusCode::FORBIDDEN,
             ErrorType::CannotGiveMissingPermissions => StatusCode::FORBIDDEN,
             ErrorType::NotOwner => StatusCode::FORBIDDEN,
-            ErrorType::IsElevated => StatusCode::FORBIDDEN,
 
             ErrorType::DatabaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             ErrorType::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
@@ -76,6 +75,11 @@ impl IntoResponse for Error {
             ErrorType::NotFound => StatusCode::NOT_FOUND,
             ErrorType::NoEffect => StatusCode::OK,
             ErrorType::FailedValidation { .. } => StatusCode::BAD_REQUEST,
+            ErrorType::LiveKitUnavailable => StatusCode::BAD_REQUEST,
+            ErrorType::NotConnected => StatusCode::BAD_REQUEST,
+            ErrorType::NotAVoiceChannel => StatusCode::BAD_REQUEST,
+            ErrorType::AlreadyConnected => StatusCode::BAD_REQUEST,
+            ErrorType::UnknownNode => StatusCode::BAD_REQUEST,
             ErrorType::InvalidFlagValue => StatusCode::BAD_REQUEST,
             ErrorType::FeatureDisabled { .. } => StatusCode::BAD_REQUEST,
 
