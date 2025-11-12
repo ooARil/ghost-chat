@@ -9,6 +9,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/client/package.json ./packages/client/
+COPY packages/client/panda.config.ts ./packages/client/
 COPY packages/stoat.js/package.json ./packages/stoat.js/
 COPY packages/solid-livekit-components/package.json ./packages/solid-livekit-components/
 
