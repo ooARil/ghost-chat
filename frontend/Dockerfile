@@ -13,7 +13,7 @@ COPY packages/client/panda.config.ts ./packages/client/
 COPY packages/stoat.js/package.json ./packages/stoat.js/
 COPY packages/solid-livekit-components/package.json ./packages/solid-livekit-components/
 
-# Install dependencies
+# Install dependencies (including dev dependencies for build)
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
