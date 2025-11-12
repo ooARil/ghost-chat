@@ -1,5 +1,3 @@
-Rocket.toml
-Revolt.*.toml
 compose.override.yml
 
 target
@@ -11,6 +9,5 @@ venv/
 .vercel
 .DS_Store
 
-livekit.yml
 .idea
 start

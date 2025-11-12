@@ -1,0 +1,40 @@
+[database]
+mongodb = "mongodb://root:CHANGE_MONGO_PASSWORD@mongodb:27017/revolt?authSource=admin"
+redis = "redis://redis:6379/"
+
+[rabbit]
+host = "rabbitmq"
+
+[hosts]
+app = "https://atuj.ru:9443"
+api = "https://atuj.ru:9443/api"
+events = "wss://atuj.ru:9443/ws"
+autumn = "https://atuj.ru:9443/autumn"
+january = "https://atuj.ru:9443/january"
+
+[hosts.livekit]
+worldwide = "wss://atuj.ru:7881"
+
+[api]
+cors_allowed_origins = [
+    "https://atuj.ru:9443",
+    "tauri://localhost"
+]
+
+# Disable email verification
+[api.smtp]
+host = ""
+
+[api.livekit.nodes.worldwide]
+url = "http://livekit:7880"
+lat = 0.0
+lon = 0.0
+key = "devkey"
+secret = "secret"
+
+[files.s3]
+endpoint = "http://minio:9000"
+region = "minio"
+access_key_id = "minioautumn"
+secret_access_key = "minioautumn"
+default_bucket = "revolt-uploads"

@@ -1,0 +1,23 @@
+[hosts]
+app = "http://localhost:5173"
+
+[hosts.livekit]
+worldwide = "ws://localhost:7880"
+
+# Disable email requirement for development
+[api.smtp]
+host = ""
+
+[api]
+cors_allowed_origins = [
+    "http://localhost:5173",
+    "http://local.revolt.chat:14701",
+    "tauri://localhost"
+]
+
+[api.livekit.nodes.worldwide]
+url = "http://localhost:7880"
+lat = 0.0
+lon = 0.0
+key = "devkey"
+secret = "secret"
