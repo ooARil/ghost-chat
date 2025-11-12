@@ -1,0 +1,128 @@
+name: Deploy Ghost Chat
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Backend Image
+      run: |
+        docker build -t ghost-chat-backend:latest ./backend
+        
+    - name: Build Frontend Image
+      run: |
+        docker build -t ghost-chat-frontend:latest ./frontend
+        
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Push Images to Registry
+      run: |
+        # Tag images for registry (lowercase)
+        REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        docker tag ghost-chat-backend:latest ghcr.io/${REPO_LOWER}/backend:latest
+        docker tag ghost-chat-frontend:latest ghcr.io/${REPO_LOWER}/frontend:latest
+        
+        # Push to registry
+        docker push ghcr.io/${REPO_LOWER}/backend:latest
+        docker push ghcr.io/${REPO_LOWER}/frontend:latest
+        
+    - name: Setup SSH Key
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -p 22 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Create deployment directory on server
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /opt/ghost-chat"
+        
+    - name: Copy project files to Server
+      run: |
+        scp docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/opt/ghost-chat/
+        scp nginx.conf ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/opt/ghost-chat/
+        scp backend/Revolt.overrides.prod.toml ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/opt/ghost-chat/backend/Revolt.overrides.toml
+        scp backend/livekit.yaml ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/opt/ghost-chat/backend/
+        scp backend/.env.prod ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/opt/ghost-chat/backend/
+          
+    - name: Update production secrets
+      run: |
+        # Update MongoDB password
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "sed -i 's/CHANGE_MONGO_PASSWORD/${{ secrets.MONGO_PASSWORD }}/' /opt/ghost-chat/backend/Revolt.overrides.toml"
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "sed -i 's/CHANGE_ME/${{ secrets.MONGO_PASSWORD }}/' /opt/ghost-chat/backend/.env.prod"
+        
+    - name: Pull Docker Images on Server
+      run: |
+        REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "export REPO_LOWER=${REPO_LOWER}; 
+          cd /opt/ghost-chat;
+          
+          # Stop containers
+          docker compose stop backend frontend nginx 2>/dev/null || true;
+          docker compose rm -f backend frontend nginx 2>/dev/null || true;
+          
+          # Login to GitHub Container Registry
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin;
+          
+          # Pull new images
+          docker pull ghcr.io/\${REPO_LOWER}/backend:latest;
+          docker pull ghcr.io/\${REPO_LOWER}/frontend:latest;
+          
+          # Retag for local use
+          docker tag ghcr.io/\${REPO_LOWER}/backend:latest ghost-chat-backend:latest;
+          docker tag ghcr.io/\${REPO_LOWER}/frontend:latest ghost-chat-frontend:latest;
+          
+          # Cleanup
+          docker image prune -f;
+          docker logout ghcr.io;
+        "
+        
+    - name: Deploy application
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "
+          cd /opt/ghost-chat
+          
+          # Set environment and start
+          ENV=prod MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}' docker compose up -d
+          
+          # Wait for startup
+          sleep 15
+          
+          # Check status
+          docker ps | grep ghost-chat
+        "
+        
+    - name: Health check
+      run: |
+        sleep 30
+        # Check HTTPS health
+        curl -f -k https://atuj.ru:9443/health || exit 1
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment successful!"
+          echo "🌐 Frontend: https://atuj.ru:9443"
+          echo "🔗 Backend API: https://atuj.ru:9443/api"
+        else
+          echo "❌ Deployment failed!"
+        fi

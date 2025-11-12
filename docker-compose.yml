@@ -1,0 +1,137 @@
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: ghost-chat-mongodb
+    restart: unless-stopped
+    ports:
+      - "27018:27017"  # Changed port to avoid conflict
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: revolt
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ghost-chat-network
+
+  # Redis
+  redis:
+    image: eqalpha/keydb
+    container_name: ghost-chat-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Changed port
+    networks:
+      - ghost-chat-network
+
+  # MinIO (S3-compatible storage)
+  minio:
+    image: minio/minio
+    container_name: ghost-chat-minio
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minioautumn
+      MINIO_ROOT_PASSWORD: minioautumn
+    volumes:
+      - minio_data:/data
+    ports:
+      - "14009:9000"
+      - "14010:9001"
+    networks:
+      - ghost-chat-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: ghost-chat-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbituser
+      RABBITMQ_DEFAULT_PASS: rabbitpass
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5673:5672"  # Changed port
+      - "15673:15672"  # Changed port
+    networks:
+      - ghost-chat-network
+
+  # LiveKit
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: ghost-chat-livekit
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-50100:50000-50100/udp"
+    volumes:
+      - ./backend/livekit.yaml:/etc/livekit.yaml
+    networks:
+      - ghost-chat-network
+
+  # Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ghost-chat-backend
+    restart: unless-stopped
+    ports:
+      - "14702:14702"
+      - "14703:14703"
+      - "14704:14704"
+      - "14705:14705"
+      - "14706:14706"
+    env_file:
+      - ./backend/.env.${ENV:-prod}
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+      - livekit
+      - minio
+    networks:
+      - ghost-chat-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ghost-chat-frontend
+    restart: unless-stopped
+    ports:
+      - "8090:80"  # Internal port
+    depends_on:
+      - backend
+    networks:
+      - ghost-chat-network
+
+  # Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: ghost-chat-nginx
+    restart: unless-stopped
+    ports:
+      - "9443:443"
+    volumes:
+      - /etc/ssl/emojitrader:/etc/ssl/certs:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ghost-chat-network
+
+volumes:
+  mongodb_data:
+  minio_data:
+  rabbitmq_data:
+
+networks:
+  ghost-chat-network:
+    driver: bridge
