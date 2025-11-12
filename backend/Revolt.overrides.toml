@@ -1,23 +1,39 @@
+[database]
+mongodb = "mongodb://root:mongopass123@ghost-chat-mongodb:27017"
+redis = "redis://ghost-chat-redis:6379/"
+
+[rabbit]
+host = "ghost-chat-rabbitmq"
+
+[files.s3]
+endpoint = "http://ghost-chat-minio:9000"
+region = "minio"
+access_key_id = "minioautumn"
+secret_access_key = "minioautumn"
+default_bucket = "revolt-uploads"
+
 [hosts]
-app = "http://localhost:5173"
+app = "https://atuj.ru:9443"
+api = "https://atuj.ru:9443/api"
+events = "wss://atuj.ru:9443/ws"
+autumn = "https://atuj.ru:9443/autumn"
+january = "https://atuj.ru:9443/january"
 
 [hosts.livekit]
-worldwide = "ws://localhost:7880"
+worldwide = "wss://atuj.ru:9443/livekit"
 
-# Disable email requirement for development
 [api.smtp]
 host = ""
 
 [api]
 cors_allowed_origins = [
-    "http://localhost:5173",
-    "http://local.revolt.chat:14701",
-    "tauri://localhost"
+    "https://atuj.ru:9443",
+    "http://localhost:5173"
 ]
 
 [api.livekit.nodes.worldwide]
-url = "http://localhost:7880"
+url = "http://ghost-chat-livekit:7880"
 lat = 0.0
 lon = 0.0
-key = "devkey"
-secret = "secret"
+key = "worldwide_key"
+secret = "ZjCofRlfm6GGtjlifmNpCDkcQbEIIVC0"
