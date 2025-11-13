@@ -6,18 +6,18 @@ redis = "redis://redis:6379/"
 host = "rabbitmq"
 
 [hosts]
-app = "https://atuj.ru:9443"
-api = "https://atuj.ru:9443/api"
-events = "wss://atuj.ru:9443/ws"
-autumn = "https://atuj.ru:9443/autumn"
-january = "https://atuj.ru:9443/january"
+app = "https://voxithub.ru"
+api = "https://voxithub.ru/api"
+events = "wss://voxithub.ru/ws"
+autumn = "https://voxithub.ru/autumn"
+january = "https://voxithub.ru/january"
 
 [hosts.livekit]
-worldwide = "wss://atuj.ru:7881"
+worldwide = "wss://voxithub.ru/livekit"
 
 [api]
 cors_allowed_origins = [
-    "https://atuj.ru:9443",
+    "https://voxithub.ru",
     "tauri://localhost"
 ]
 

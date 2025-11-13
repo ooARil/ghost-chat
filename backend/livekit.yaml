@@ -8,7 +8,7 @@ rtc:
   use_external_ip: true
   
 keys:
-  devkey: secret
+  worldwide_key: ZjCofRlfm6GGtjlifmNpCDkcQbEIIVC0
 
 logging:
   level: info

@@ -12,6 +12,8 @@ COPY packages/client/package.json ./packages/client/
 COPY packages/client/panda.config.ts ./packages/client/
 COPY packages/stoat.js/package.json ./packages/stoat.js/
 COPY packages/solid-livekit-components/package.json ./packages/solid-livekit-components/
+COPY packages/js-lingui-solid/packages/babel-plugin-lingui-macro/package.json ./packages/js-lingui-solid/packages/babel-plugin-lingui-macro/
+COPY packages/js-lingui-solid/packages/babel-plugin-extract-messages/package.json ./packages/js-lingui-solid/packages/babel-plugin-extract-messages/
 
 # Install dependencies (including dev dependencies for build)
 RUN pnpm install --frozen-lockfile
@@ -22,8 +24,14 @@ COPY . .
 # Build dependencies first
 RUN pnpm build:deps
 
-# Build frontend
-RUN pnpm --filter client build:prod
+# Build frontend with root base path
+RUN NODE_OPTIONS="--max-old-space-size=6144" \
+    BASE_PATH=/ \
+    VITE_API_URL=https://voxithub.ru/api \
+    VITE_WS_URL=wss://voxithub.ru/ws \
+    VITE_MEDIA_URL=https://voxithub.ru/autumn \
+    VITE_PROXY_URL=https://voxithub.ru/january \
+    pnpm --filter client build:prod
 
 # Production stage with nginx
 FROM nginx:alpine
@@ -32,28 +40,7 @@ FROM nginx:alpine
 COPY --from=builder /app/packages/client/dist /usr/share/nginx/html
 
 # Copy nginx config
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Enable gzip
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-EOF
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

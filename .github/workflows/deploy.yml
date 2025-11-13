@@ -114,15 +114,15 @@ jobs:
       run: |
         sleep 30
         # Check HTTPS health
-        curl -f -k https://atuj.ru:9443/health || exit 1
+        curl -f -k https://voxithub.ru/health || exit 1
         
     - name: Notify deployment status
       if: always()
       run: |
         if [ "${{ job.status }}" == "success" ]; then
           echo "✅ Deployment successful!"
-          echo "🌐 Frontend: https://atuj.ru:9443"
-          echo "🔗 Backend API: https://atuj.ru:9443/api"
+          echo "🌐 Frontend: https://voxithub.ru"
+          echo "🔗 Backend API: https://voxithub.ru/api"
         else
           echo "❌ Deployment failed!"
         fi
