@@ -63,16 +63,47 @@ ENV=prod docker compose up -d
 
 ## Локальная разработка
 
-```bash
-# Backend
-cd backend
-cargo run --bin revolt-delta &
-cargo run --bin revolt-bonfire &
+1. Скопируй переменные по умолчанию и задай реальные значения:
+   ```bash
+   cp .env.example .env             # содержит MONGO_PASSWORD и ENV
+   cp backend/.env.dev backend/.env # опционально переопредели APP_ENV/RUST_LOG
+   cp frontend/packages/client/.env.example frontend/packages/client/.env
+   ```
+2. Запусти инфраструктуру:
+   ```bash
+   # Linux / macOS
+   ENV=dev docker compose up -d
+   # Windows PowerShell
+   $Env:ENV="dev"; docker compose up -d
+   ```
+3. Подними сервисы бэкенда локально:
+   ```bash
+   cd backend
+   cargo run --bin revolt-delta &
+   cargo run --bin revolt-bonfire &
+   cargo run --bin revolt-autumn &
+   cargo run --bin revolt-january &
+   cargo run --bin revolt-gifbox &
+   ```
+4. Запусти веб-клиент:
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev:web
+   ```
 
-# Frontend
+### Desktop (Tauri)
+
+Для нативной версии теперь есть оболочка на базе Tauri:
+
+```bash
 cd frontend
-pnpm dev
+pnpm install                   # ставит @tauri-apps/cli в workspace
+pnpm dev:desktop               # Tauri dev + Vite
+pnpm build:desktop             # сборка установщика
 ```
+
+`backend/Revolt.overrides.toml` уже настроен на `localhost` и включает CORS для `tauri://localhost`, поэтому API принимает запросы от десктоп-клиента без дополнительных правок.
 
 ## Порты
 

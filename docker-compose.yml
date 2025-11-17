@@ -99,37 +99,37 @@ services:
     networks:
       - ghost-chat-network
 
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ghost-chat-frontend
-    restart: unless-stopped
-    ports:
-      - "8090:80"  # Internal port
-    depends_on:
-      - backend
-    networks:
-      - ghost-chat-network
+  # Frontend - disabled for local development
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: ghost-chat-frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8090:80"  # Internal port
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - ghost-chat-network
 
-  # Nginx reverse proxy with SSL
-  nginx:
-    image: nginx:alpine
-    container_name: ghost-chat-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/www/certbot:/var/www/certbot:ro
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - ghost-chat-network
+  # Nginx reverse proxy with SSL - disabled for local development
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: ghost-chat-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  #     - /etc/letsencrypt:/etc/letsencrypt:ro
+  #     - /var/www/certbot:/var/www/certbot:ro
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   networks:
+  #     - ghost-chat-network
 
 volumes:
   mongodb_data:
