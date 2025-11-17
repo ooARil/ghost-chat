@@ -13,22 +13,24 @@ secret_access_key = "minioautumn"
 default_bucket = "revolt-uploads"
 
 [hosts]
-app = "https://voxithub.ru"
-api = "https://voxithub.ru/api"
-events = "wss://voxithub.ru/ws"
-autumn = "https://voxithub.ru/autumn"
-january = "https://voxithub.ru/january"
+app = "http://localhost:5173"
+api = "http://localhost:14702"
+events = "ws://localhost:14703"
+autumn = "http://localhost:14704"
+january = "http://localhost:14705"
 
 [hosts.livekit]
-worldwide = "wss://voxithub.ru/livekit"
+worldwide = "ws://localhost:7880"
 
 [api.smtp]
 host = ""
 
 [api]
 cors_allowed_origins = [
-    "https://voxithub.ru",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:1420",
+    "tauri://localhost"
 ]
 
 [api.livekit.nodes.worldwide]

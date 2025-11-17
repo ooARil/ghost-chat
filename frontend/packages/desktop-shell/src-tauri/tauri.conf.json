@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Ghost Chat",
+  "version": "0.1.0",
+  "identifier": "ru.voxithub.ghostchat",
+  "build": {
+    "beforeDevCommand": "powershell -Command \"cd ../.. ; $env:VITE_API_URL='https://voxithub.ru/api' ; $env:VITE_WS_URL='wss://voxithub.ru/ws' ; $env:VITE_MEDIA_URL='https://voxithub.ru/autumn' ; $env:VITE_PROXY_URL='https://voxithub.ru/january' ; pnpm --filter client dev -- --host 127.0.0.1 --port 5173\"",
+    "beforeBuildCommand": "powershell -Command \"cd ../.. ; $env:VITE_API_URL='https://voxithub.ru/api' ; $env:VITE_WS_URL='wss://voxithub.ru/ws' ; $env:VITE_MEDIA_URL='https://voxithub.ru/autumn' ; $env:VITE_PROXY_URL='https://voxithub.ru/january' ; pnpm --filter client build\"",
+    "devUrl": "http://127.0.0.1:5173",
+    "frontendDist": "../../client/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Ghost Chat",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico",
+      "icons/icon-192.png"
+    ]
+  }
+}
+
